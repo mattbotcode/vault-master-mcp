@@ -7,6 +7,11 @@ import {
   handleFindRelated,
   handleListNotes,
 } from "./tools/discovery.js";
+import {
+  handleReadNote,
+  handleGetGraphContext,
+  handleWalkGraph,
+} from "./tools/context.js";
 
 export function createServer(db: VaultDatabase, graph: GraphEngine): McpServer {
   const server = new McpServer({
@@ -61,6 +66,63 @@ export function createServer(db: VaultDatabase, graph: GraphEngine): McpServer {
       const results = handleListNotes(db, args);
       return {
         content: [{ type: "text", text: JSON.stringify(results, null, 2) }],
+      };
+    }
+  );
+
+  // --- Context Assembly Tools ---
+
+  server.tool(
+    "read_note",
+    "Read a note with full metadata, backlinks, and freshness info.",
+    {
+      path: z.string().describe("Note path relative to vault root"),
+    },
+    async (args) => {
+      const result = handleReadNote(db, graph, args);
+      if (!result) {
+        return {
+          content: [{ type: "text", text: `Note not found: ${args.path}` }],
+          isError: true,
+        };
+      }
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+      };
+    }
+  );
+
+  server.tool(
+    "get_graph_context",
+    "Get optimal subgraph within token budget for a topic or note path.",
+    {
+      topic: z.string().describe("Note path or tag to center the context on"),
+      token_budget: z.number().optional().describe("Max tokens to include (default 4000)"),
+      depth: z.number().optional().describe("Max graph traversal depth (default 2)"),
+    },
+    async (args) => {
+      const result = handleGetGraphContext(db, graph, args);
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+      };
+    }
+  );
+
+  server.tool(
+    "walk_graph",
+    "BFS traversal from a start note. Optionally follow only outgoing or incoming links.",
+    {
+      start: z.string().describe("Starting note path"),
+      depth: z.number().optional().describe("Max traversal depth (default 2)"),
+      direction: z
+        .enum(["outgoing", "incoming", "both"])
+        .optional()
+        .describe("Link direction to follow (default both)"),
+    },
+    async (args) => {
+      const result = handleWalkGraph(graph, args);
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
       };
     }
   );
