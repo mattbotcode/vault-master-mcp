@@ -1,9 +1,22 @@
 import { readFile, writeFile, mkdir } from "fs/promises";
-import { join, dirname } from "path";
+import { join, dirname, resolve, relative } from "path";
 import matter from "gray-matter";
 import type { VaultDatabase } from "../db/sqlite.js";
 import type { GraphEngine } from "../graph/engine.js";
 import type { VaultIndexer } from "../graph/indexer.js";
+
+/**
+ * Resolve a user-supplied path and verify it stays within the vault.
+ * Prevents path traversal attacks (e.g. "../../.ssh/authorized_keys").
+ */
+function safePath(vaultPath: string, userPath: string): string {
+  const resolved = resolve(vaultPath, userPath);
+  const vaultRoot = resolve(vaultPath);
+  if (!resolved.startsWith(vaultRoot + "/") && resolved !== vaultRoot) {
+    throw new Error(`Path traversal blocked: ${userPath}`);
+  }
+  return resolved;
+}
 
 export interface WriteToolContext {
   vaultPath: string;
@@ -37,7 +50,7 @@ export async function handleCreateNote(
   }
 
   try {
-    const absPath = join(ctx.vaultPath, args.path);
+    const absPath = safePath(ctx.vaultPath, args.path);
 
     // Create parent directories if needed
     await mkdir(dirname(absPath), { recursive: true });
@@ -86,7 +99,7 @@ export async function handleUpdateNote(
   args: UpdateNoteArgs
 ): Promise<WriteResult> {
   try {
-    const absPath = join(ctx.vaultPath, args.path);
+    const absPath = safePath(ctx.vaultPath, args.path);
 
     // Read existing file — will throw if missing
     let raw: string;
@@ -144,7 +157,7 @@ export async function handleAddLinks(
   args: AddLinksArgs
 ): Promise<WriteResult> {
   try {
-    const absPath = join(ctx.vaultPath, args.from);
+    const absPath = safePath(ctx.vaultPath, args.from);
 
     let raw: string;
     try {
@@ -193,7 +206,7 @@ export async function handleMarkSuperseded(
   args: MarkSupersededArgs
 ): Promise<WriteResult> {
   try {
-    const absPath = join(ctx.vaultPath, args.old_path);
+    const absPath = safePath(ctx.vaultPath, args.old_path);
 
     let raw: string;
     try {

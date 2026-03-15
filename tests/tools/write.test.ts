@@ -399,3 +399,53 @@ describe("mark_superseded", () => {
     expect(result.error).toBeDefined();
   });
 });
+
+// ============================================================
+// Path traversal protection
+// ============================================================
+
+describe("path traversal protection", () => {
+  it("blocks create_note with path traversal", async () => {
+    const result = await handleCreateNote(ctx, {
+      path: "../../etc/malicious.md",
+      content: "should not be written",
+    });
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("Path traversal blocked");
+  });
+
+  it("blocks update_note with path traversal", async () => {
+    const result = await handleUpdateNote(ctx, {
+      path: "../../../tmp/escape.md",
+      content: "nope",
+    });
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("Path traversal blocked");
+  });
+
+  it("blocks add_links with path traversal", async () => {
+    const result = await handleAddLinks(ctx, {
+      from: "../../outside.md",
+      to: ["target.md"],
+    });
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("Path traversal blocked");
+  });
+
+  it("blocks mark_superseded with path traversal", async () => {
+    const result = await handleMarkSuperseded(ctx, {
+      old_path: "../../../etc/passwd",
+      new_path: "notes/new.md",
+    });
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("Path traversal blocked");
+  });
+
+  it("allows valid nested paths", async () => {
+    const result = await handleCreateNote(ctx, {
+      path: "deeply/nested/folder/note.md",
+      content: "This is fine",
+    });
+    expect(result.success).toBe(true);
+  });
+});
