@@ -4,7 +4,6 @@
     <strong>Your Obsidian vault is a knowledge graph. Your AI should treat it like one.</strong>
   </p>
   <p align="center">
-    <a href="https://www.npmjs.com/package/vault-master-mcp"><img src="https://img.shields.io/npm/v/vault-master-mcp.svg" alt="npm version"></a>
     <a href="https://github.com/mattbotcode/vault-master-mcp/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
     <a href="https://github.com/mattbotcode/vault-master-mcp/actions"><img src="https://img.shields.io/badge/tests-120%2B%20passing-brightgreen.svg" alt="Tests"></a>
     <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/MCP-compatible-purple.svg" alt="MCP Compatible"></a>
@@ -55,10 +54,14 @@ SQLite FTS5 search that optionally includes graph neighbors in results, so agent
 ## Quick Start
 
 ```bash
-npx vault-master-mcp --vault ~/my-vault
-```
+# Clone and build
+git clone https://github.com/mattbotcode/vault-master-mcp
+cd vault-master-mcp
+npm install && npm run build
 
-That's it. The server indexes your vault, starts the file watcher, and connects over stdio.
+# Run against your vault
+node dist/index.js --vault ~/my-vault
+```
 
 ---
 
@@ -80,8 +83,8 @@ vault-master-mcp runs as an MCP server — it works with any MCP-compatible clie
 {
   "mcpServers": {
     "vault-master": {
-      "command": "npx",
-      "args": ["vault-master-mcp", "--vault", "/path/to/your/vault"]
+      "command": "node",
+      "args": ["/path/to/vault-master-mcp/dist/index.js", "--vault", "/path/to/your/vault"]
     }
   }
 }
@@ -93,8 +96,8 @@ vault-master-mcp runs as an MCP server — it works with any MCP-compatible clie
 {
   "mcpServers": {
     "vault-master": {
-      "command": "npx",
-      "args": ["vault-master-mcp", "--vault", "/path/to/your/vault"]
+      "command": "node",
+      "args": ["/path/to/vault-master-mcp/dist/index.js", "--vault", "/path/to/your/vault"]
     }
   }
 }
