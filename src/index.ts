@@ -4,6 +4,7 @@ import { join } from "path";
 import { VaultDatabase } from "./db/sqlite.js";
 import { GraphEngine } from "./graph/engine.js";
 import { VaultIndexer } from "./graph/indexer.js";
+import { VaultWatcher } from "./graph/watcher.js";
 import { createServer } from "./server.js";
 
 async function main(): Promise<void> {
@@ -34,6 +35,18 @@ async function main(): Promise<void> {
   const start = Date.now();
   await indexer.fullScan();
   console.error(`[vault-master] Indexed ${graph.size} notes in ${Date.now() - start}ms`);
+
+  // Start file watcher for incremental updates
+  const watcher = new VaultWatcher(vaultPath, indexer);
+  watcher.start();
+  console.error("[vault-master] File watcher active");
+
+  // Clean up on exit
+  process.on("SIGINT", async () => {
+    await watcher.stop();
+    db.close();
+    process.exit(0);
+  });
 
   // Create and start MCP server
   const server = createServer(db, graph, vaultPath, indexer);
