@@ -81,6 +81,8 @@ vault-master-mcp runs as an MCP server — it works with any MCP-compatible clie
 | **VS Code + Copilot** | `.vscode/mcp.json` |
 | **Any MCP client** | See [MCP docs](https://modelcontextprotocol.io) |
 
+> **Note on OpenClaw:** OpenClaw does not currently support native MCP clients. The OpenClaw team considers direct MCP integration a "token tax" (tool definitions loaded into every agent session). The planned bridge is **mcporter**, which converts MCP servers into on-demand CLI commands — but this is not yet available. For multi-agent setups using OpenClaw, delegate vault discovery queries to a Claude Code session that has vault-master connected.
+
 ### Claude Desktop Example
 
 ```json
