@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { VaultDatabase } from "./db/sqlite.js";
 import type { GraphEngine } from "./graph/engine.js";
+import type { VaultIndexer } from "./graph/indexer.js";
 import {
   handleSearchVault,
   handleFindRelated,
@@ -12,12 +13,26 @@ import {
   handleGetGraphContext,
   handleWalkGraph,
 } from "./tools/context.js";
+import {
+  handleCreateNote,
+  handleUpdateNote,
+  handleAddLinks,
+  handleMarkSuperseded,
+} from "./tools/write.js";
+import type { WriteToolContext } from "./tools/write.js";
 
-export function createServer(db: VaultDatabase, graph: GraphEngine): McpServer {
+export function createServer(
+  db: VaultDatabase,
+  graph: GraphEngine,
+  vaultPath: string,
+  indexer: VaultIndexer
+): McpServer {
   const server = new McpServer({
     name: "vault-master-mcp",
     version: "0.1.0",
   });
+
+  const writeCtx: WriteToolContext = { vaultPath, db, graph, indexer };
 
   // --- Discovery Tools ---
 
@@ -123,6 +138,110 @@ export function createServer(db: VaultDatabase, graph: GraphEngine): McpServer {
       const result = handleWalkGraph(graph, args);
       return {
         content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+      };
+    }
+  );
+
+  // --- Write-back Tools ---
+
+  server.tool(
+    "create_note",
+    "Create a new note in the vault with optional frontmatter and wikilinks.",
+    {
+      path: z.string().describe("Path for the new note relative to vault root"),
+      content: z.string().describe("Body content of the note"),
+      frontmatter: z
+        .record(z.unknown())
+        .optional()
+        .describe("Frontmatter key-value pairs"),
+      link_to: z
+        .array(z.string())
+        .optional()
+        .describe("Note paths to add as 'See also' wikilinks"),
+    },
+    async (args) => {
+      const result = await handleCreateNote(writeCtx, {
+        path: args.path,
+        content: args.content,
+        frontmatter: args.frontmatter as Record<string, unknown> | undefined,
+        link_to: args.link_to,
+      });
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        isError: !result.success,
+      };
+    }
+  );
+
+  server.tool(
+    "update_note",
+    "Update body content and/or merge frontmatter into an existing note.",
+    {
+      path: z.string().describe("Path to the note relative to vault root"),
+      content: z.string().optional().describe("New body content (replaces existing)"),
+      frontmatter_updates: z
+        .record(z.unknown())
+        .optional()
+        .describe("Frontmatter keys to merge into existing frontmatter"),
+    },
+    async (args) => {
+      const result = await handleUpdateNote(writeCtx, {
+        path: args.path,
+        content: args.content,
+        frontmatter_updates: args.frontmatter_updates as
+          | Record<string, unknown>
+          | undefined,
+      });
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        isError: !result.success,
+      };
+    }
+  );
+
+  server.tool(
+    "add_links",
+    "Append wikilinks to a note's Related section (creates section if absent).",
+    {
+      from: z.string().describe("Source note path relative to vault root"),
+      to: z.array(z.string()).describe("Target note paths to link to"),
+    },
+    async (args) => {
+      const result = await handleAddLinks(writeCtx, {
+        from: args.from,
+        to: args.to,
+      });
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        isError: !result.success,
+      };
+    }
+  );
+
+  server.tool(
+    "mark_superseded",
+    "Mark a note as superseded by another note, updating its frontmatter.",
+    {
+      old_path: z
+        .string()
+        .describe("Path to the note being superseded (relative to vault root)"),
+      new_path: z
+        .string()
+        .describe("Path to the replacement note (relative to vault root)"),
+      reason: z
+        .string()
+        .optional()
+        .describe("Optional reason for superseding"),
+    },
+    async (args) => {
+      const result = await handleMarkSuperseded(writeCtx, {
+        old_path: args.old_path,
+        new_path: args.new_path,
+        reason: args.reason,
+      });
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        isError: !result.success,
       };
     }
   );

@@ -36,7 +36,7 @@ async function main(): Promise<void> {
   console.error(`[vault-master] Indexed ${graph.size} notes in ${Date.now() - start}ms`);
 
   // Create and start MCP server
-  const server = createServer(db, graph);
+  const server = createServer(db, graph, vaultPath, indexer);
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error("[vault-master] MCP server running on stdio");
