@@ -172,22 +172,36 @@ export class VaultDatabase {
   }
 
   searchFTS(query: string, limit = 20): SearchResult[] {
-    const rows = this.db
-      .prepare(
-        `SELECT path, title, snippet(notes_fts, 2, '<b>', '</b>', '...', 32) as snippet,
-                rank
-         FROM notes_fts
-         WHERE notes_fts MATCH ?
-         ORDER BY rank
-         LIMIT ?`
-      )
-      .all(query, limit) as { path: string; title: string; snippet: string; rank: number }[];
-    return rows.map((r) => ({
-      path: r.path,
-      title: r.title,
-      snippet: r.snippet,
-      score: -r.rank,
-    }));
+    // Sanitize for FTS5: wrap each word in double quotes to force literal matching,
+    // strip characters that have special FTS5 meaning
+    const safeQuery = query
+      .replace(/[":(){}*^~]/g, " ")  // strip FTS5 operators
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((word) => `"${word}"`)
+      .join(" ")
+      || '""';  // empty query fallback
+    try {
+      const rows = this.db
+        .prepare(
+          `SELECT path, title, snippet(notes_fts, 2, '<b>', '</b>', '...', 32) as snippet,
+                  rank
+           FROM notes_fts
+           WHERE notes_fts MATCH ?
+           ORDER BY rank
+           LIMIT ?`
+        )
+        .all(safeQuery, limit) as { path: string; title: string; snippet: string; rank: number }[];
+      return rows.map((r) => ({
+        path: r.path,
+        title: r.title,
+        snippet: r.snippet,
+        score: -r.rank,
+      }));
+    } catch {
+      // Malformed FTS5 query — return empty results
+      return [];
+    }
   }
 
   deleteNote(path: string): void {

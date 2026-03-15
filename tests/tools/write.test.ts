@@ -122,6 +122,25 @@ describe("create_note", () => {
     expect(result.success).toBe(false);
     expect(result.error).toBeDefined();
   });
+
+  it("refuses to overwrite an existing note", async () => {
+    await handleCreateNote(ctx, {
+      path: "notes/existing.md",
+      content: "Original content.",
+    });
+
+    const result = await handleCreateNote(ctx, {
+      path: "notes/existing.md",
+      content: "Overwrite attempt!",
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("already exists");
+
+    // Verify original content preserved
+    const diskContent = await readFile(join(tmpDir, "notes/existing.md"), "utf-8");
+    expect(diskContent).toContain("Original content.");
+  });
 });
 
 // ============================================================

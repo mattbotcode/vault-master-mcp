@@ -105,4 +105,21 @@ describe("VaultDatabase", () => {
     const backlinks = db.getBacklinks("b.md");
     expect(backlinks).toEqual(["a.md"]);
   });
+
+  it("handles malformed FTS5 queries without crashing", () => {
+    db.upsertNote(sampleNote);
+    // These would crash raw FTS5 — sanitization prevents the crash
+    expect(() => db.searchFTS("(")).not.toThrow();
+    expect(() => db.searchFTS("note:")).not.toThrow();
+    expect(() => db.searchFTS("AND OR NOT")).not.toThrow();
+    expect(() => db.searchFTS("))()(")).not.toThrow();
+    expect(() => db.searchFTS("")).not.toThrow();
+  });
+
+  it("FTS search still works with normal queries after sanitization", () => {
+    db.upsertNote(sampleNote);
+    const results = db.searchFTS("economics");
+    expect(results.length).toBe(1);
+    expect(results[0].path).toBe("projects/test.md");
+  });
 });

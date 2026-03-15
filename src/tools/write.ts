@@ -1,4 +1,4 @@
-import { readFile, writeFile, mkdir } from "fs/promises";
+import { readFile, writeFile, mkdir, access } from "fs/promises";
 import { join, dirname, resolve, relative } from "path";
 import matter from "gray-matter";
 import type { VaultDatabase } from "../db/sqlite.js";
@@ -51,6 +51,14 @@ export async function handleCreateNote(
 
   try {
     const absPath = safePath(ctx.vaultPath, args.path);
+
+    // Prevent silent overwrite of existing notes
+    try {
+      await access(absPath);
+      return { success: false, error: `Note already exists: ${args.path}. Use update_note to modify it.` };
+    } catch {
+      // File doesn't exist — safe to create
+    }
 
     // Create parent directories if needed
     await mkdir(dirname(absPath), { recursive: true });

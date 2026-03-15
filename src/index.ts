@@ -41,12 +41,14 @@ async function main(): Promise<void> {
   watcher.start();
   console.error("[vault-master] File watcher active");
 
-  // Clean up on exit
-  process.on("SIGINT", async () => {
+  // Clean up on exit (MCP hosts send SIGTERM, terminals send SIGINT)
+  const cleanup = async () => {
     await watcher.stop();
     db.close();
     process.exit(0);
-  });
+  };
+  process.on("SIGINT", cleanup);
+  process.on("SIGTERM", cleanup);
 
   // Create and start MCP server
   const server = createServer(db, graph, vaultPath, indexer);

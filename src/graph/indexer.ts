@@ -92,7 +92,7 @@ export class VaultIndexer {
       return {
         path: relPath,
         title,
-        content: raw,
+        content,
         frontmatter: data,
         outLinks: rawLinks, // unresolved — will be resolved later
         tags: allTags,
