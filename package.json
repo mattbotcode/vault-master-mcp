@@ -1,0 +1,32 @@
+{
+  "name": "vault-master-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for graph-aware Obsidian vault traversal",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "vault-master-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": ["mcp", "obsidian", "knowledge-graph", "vault"],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "better-sqlite3": "^11.8.2",
+    "chokidar": "^4.0.3",
+    "gray-matter": "^4.0.3",
+    "zod": "^3.25.3"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^22.15.2",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.2"
+  }
+}
