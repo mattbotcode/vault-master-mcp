@@ -5,7 +5,7 @@
   </p>
   <p align="center">
     <a href="https://github.com/mattbotcode/vault-master-mcp/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
-    <a href="https://github.com/mattbotcode/vault-master-mcp/actions"><img src="https://img.shields.io/badge/tests-120%2B%20passing-brightgreen.svg" alt="Tests"></a>
+    <img src="https://img.shields.io/badge/tests-120%2B%20passing-brightgreen.svg" alt="Tests">
     <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/MCP-compatible-purple.svg" alt="MCP Compatible"></a>
   </p>
 </p>
