@@ -32,6 +32,8 @@ export class VaultWatcher {
       ignored: [
         "**/node_modules/**",
         "**/.git/**",
+        "**/.obsidian/**",
+        "**/.trash/**",
         "**/.vault-master.db*",
       ],
       usePolling: this.usePolling,

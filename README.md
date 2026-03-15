@@ -85,7 +85,7 @@ npm test        # run tests
 npm run build   # compile TypeScript
 ```
 
-Tests use [Vitest](https://vitest.dev/) with a temporary in-memory vault fixture. The test suite covers all 10 tools, graph traversal, FTS5 search, freshness tracking, and file watcher integration (114 tests).
+Tests use [Vitest](https://vitest.dev/) with a temporary in-memory vault fixture. The test suite covers all 10 tools, graph traversal, FTS5 search, freshness tracking, and file watcher integration (120+ tests).
 
 ---
 

@@ -55,12 +55,14 @@ export class VaultIndexer {
     const { readdir } = await import("fs/promises");
     const results: string[] = [];
 
+    const SKIP_DIRS = new Set([".obsidian", ".git", "node_modules", ".trash"]);
+
     async function walk(currentDir: string) {
       const entries = await readdir(currentDir, { withFileTypes: true });
       for (const entry of entries) {
         const fullPath = join(currentDir, entry.name);
         if (entry.isDirectory()) {
-          await walk(fullPath);
+          if (!SKIP_DIRS.has(entry.name)) await walk(fullPath);
         } else if (entry.name.endsWith(".md")) {
           results.push(fullPath);
         }

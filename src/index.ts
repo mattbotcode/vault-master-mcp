@@ -43,8 +43,12 @@ async function main(): Promise<void> {
 
   // Clean up on exit (MCP hosts send SIGTERM, terminals send SIGINT)
   const cleanup = async () => {
-    await watcher.stop();
-    db.close();
+    try {
+      await watcher.stop();
+      db.close();
+    } catch (err) {
+      console.error("[vault-master] Cleanup error:", err);
+    }
     process.exit(0);
   };
   process.on("SIGINT", cleanup);
